@@ -13,20 +13,20 @@ Base = declarative_base()
 
 
 
-class Worker (Base):
-    __tablename__ = 'workers'
+class User (Base):
+    __tablename__ = 'Users'
 
     id = Column('id', Integer, primary_key=True, autoincrement=True)
     name = Column('name', String, nullable=False)
     email = Column('email', String, nullable=False)
     password = Column('password', String, nullable=False)
-    security_tier = Column ('admin', Integer, nullable=False)
+    admin = Column ('admin', Boolean, nullable=False, default=False)
 
-    def __init__(self, name, email, password, security_tier):
+    def __init__(self, name, email, password, admin):
         self.name = name
         self.email = email
         self.password = password
-        self.security_tier = security_tier
+        self.admin = admin
 
 
 class Vehicle(Base):
