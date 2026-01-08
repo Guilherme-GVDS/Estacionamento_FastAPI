@@ -26,3 +26,27 @@ class LoginSchema(BaseModel):
 
     class Config:
         from_attributes = True    
+
+class VehicleSchema(BaseModel):
+    plate: str
+    type: str
+    phone_number: str
+    email: str
+
+    class Config:
+        from_attributes = True   
+
+class SpotSchema(BaseModel):
+    is_occupied: bool
+    price: float
+    vehicle_id: int
+    
+    class Config:
+        from_attributes = True   
+
+class NewSpotSchema(BaseModel):
+    is_occupied: bool
+    price: float
+    
+    class Config:
+        from_attributes = True

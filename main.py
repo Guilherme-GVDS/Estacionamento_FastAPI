@@ -16,9 +16,10 @@ oauth2_schema = OAuth2PasswordBearer(tokenUrl='auth/login-form')
 
 
 from auth_routes import auth_router 
-
+from vehicle_routes import park_router
 
 app.include_router(auth_router)
+app.include_router(park_router)
 
 
 # uvicorn main:app --reload

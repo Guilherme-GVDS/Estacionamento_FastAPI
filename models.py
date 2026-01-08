@@ -49,7 +49,7 @@ class ParkingSpots(Base):
     __tablename__ = 'parking_spots'
 
     id = Column('id', Integer, primary_key=True, autoincrement=True)
-    is_occupied = Column('is_occupied', Boolean, nullable= False)
+    is_occupied = Column('is_occupied', Boolean, nullable= False, default=False)
     price = Column('price', Float, nullable = False)
     vehicle_id = Column('vehicle_id', ForeignKey('vehicles.id'), nullable= True)
 
