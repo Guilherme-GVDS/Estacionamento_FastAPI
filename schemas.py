@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 
 class UserSchema(BaseModel):
     name: str
@@ -39,7 +40,33 @@ class VehicleSchema(BaseModel):
 class SpotSchema(BaseModel):
     is_occupied: bool
     price: float
-    vehicle_id: int
     
     class Config:
         from_attributes = True   
+
+class ParkingRecordCreate(BaseModel):
+    parking_spot_id: int 
+    vehicle_id: int 
+    paid: bool
+
+    class Config:
+        from_attributes = True   
+
+class ParkingRecord(BaseModel):
+    id: int
+    parking_spot_id: int
+    vehicle_id: int
+    entry_time: datetime
+    exit_time: Optional[datetime] = None
+    price: Optional[float] = None
+    paid: bool
+
+    class Config:
+        from_attributes = True  
+
+class ParkingRecordCheckout(BaseModel):
+    price: float 
+    paid: bool
+
+    class Config:
+        from_attributes = True  

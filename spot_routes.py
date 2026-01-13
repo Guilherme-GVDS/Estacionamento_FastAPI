@@ -22,6 +22,4 @@ async def register_spot(spot_schema: SpotSchema,
         session.commit() 
         return {'mensagem': f'Vaga cadastrada'}
 
-'''@spot_router
-async def parking_vehicle():
-    pass'''
+
