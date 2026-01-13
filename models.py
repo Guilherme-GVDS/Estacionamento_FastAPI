@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine , Column, DateTime, String, Integer, Float, Boolean, ForeignKey
+from sqlalchemy import create_engine , Column, DateTime, String, Integer, Float, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -33,8 +33,8 @@ class Vehicle(Base):
     __tablename__ = 'vehicles'
 
     id = Column('id', Integer, primary_key=True, autoincrement=True)
-    plate = Column('plate', String, nullable= False)
-    type = Column('type', String, nullable= False)
+    plate = Column('plate',String, nullable= False, unique=True)
+    type = Column('type', Enum('carro', 'moto', name='vehicle_type'), nullable= False)
     phone_number = Column('phone_number', String, nullable= False)
     email = Column('email', String, nullable= False)
     

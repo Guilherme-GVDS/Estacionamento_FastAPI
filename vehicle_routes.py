@@ -21,6 +21,8 @@ async def register_vehicle(vehicle_schema: VehicleSchema,
 
     if vehicle:
         raise HTTPException (status_code=400, detail='Carro já cadastrado')
+    elif vehicle_schema.type not in ['moto','carro']:
+        raise HTTPException (status_code=400, detail='Definir o tipo de veiculo para moto ou carro')
     else:
         new_vehicle = Vehicle(vehicle_schema.plate, vehicle_schema.type, 
                         vehicle_schema.phone_number, vehicle_schema.email)
@@ -28,13 +30,6 @@ async def register_vehicle(vehicle_schema: VehicleSchema,
         session.commit() 
         return {'mensagem': f'Veiculo cadastrado {vehicle_schema.plate}'}
     
-@park_router.post('/register_spot')
-async def register_spot(spot_schema: SpotSchema,
-                        session: Session = Depends(get_session)):
-        new_spot = ParkingSpots(spot_schema.is_occupied, spot_schema.price, spot_schema.vehicle_id)
-        session.add(new_spot)
-        session.commit() 
-        return {'mensagem': f'Vaga cadastrada'}
     
 
 

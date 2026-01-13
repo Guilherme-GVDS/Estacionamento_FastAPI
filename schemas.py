@@ -43,10 +43,3 @@ class SpotSchema(BaseModel):
     
     class Config:
         from_attributes = True   
-
-class NewSpotSchema(BaseModel):
-    is_occupied: bool
-    price: float
-    
-    class Config:
-        from_attributes = True
