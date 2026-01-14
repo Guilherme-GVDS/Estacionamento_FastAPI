@@ -1,8 +1,8 @@
 """Initial Migration
 
-Revision ID: 919d7ccb9b6c
+Revision ID: b52a064aae4c
 Revises: 
-Create Date: 2026-01-13 15:12:15.237795
+Create Date: 2026-01-14 13:14:30.560923
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '919d7ccb9b6c'
+revision: str = 'b52a064aae4c'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -41,6 +41,7 @@ def upgrade() -> None:
     op.create_table('parking_spots',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('is_occupied', sa.Boolean(), nullable=False),
+    sa.Column('type', sa.Enum('carro', 'moto', name='vehicle_type'), nullable=False),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('vehicle_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['vehicle_id'], ['vehicles.id'], ),
@@ -50,9 +51,9 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('parking_spot_id', sa.Integer(), nullable=False),
     sa.Column('vehicle_id', sa.Integer(), nullable=False),
-    sa.Column('entry_time', sa.DateTime(timezone=True), nullable=False),
+    sa.Column('entry_time', sa.DateTime(), nullable=False),
     sa.Column('exit_time', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('price', sa.Float(), nullable=True),
+    sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('paid', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['parking_spot_id'], ['parking_spots.id'], ),
     sa.ForeignKeyConstraint(['vehicle_id'], ['vehicles.id'], ),

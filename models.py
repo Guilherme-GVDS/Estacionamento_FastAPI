@@ -22,11 +22,6 @@ class User (Base):
     password = Column('password', String, nullable=False)
     admin = Column ('admin', Boolean, nullable=False, default=False)
 
-    def __init__(self, name, email, password, admin):
-        self.name = name
-        self.email = email
-        self.password = password
-        self.admin = admin
 
 
 class Vehicle(Base):
@@ -38,11 +33,6 @@ class Vehicle(Base):
     phone_number = Column('phone_number', String, nullable= False)
     email = Column('email', String, nullable= False)
     
-    def __init__ (self, plate, type, phone_number, email):
-        self.plate = plate
-        self.type = type
-        self.phone_number = phone_number
-        self.email = email
 
         
 class ParkingSpots(Base):
@@ -50,6 +40,7 @@ class ParkingSpots(Base):
 
     id = Column('id', Integer, primary_key=True, autoincrement=True)
     is_occupied = Column('is_occupied', Boolean, nullable= False, default=False)
+    type = Column('type', Enum('carro', 'moto', name='vehicle_type'), nullable= False)
     price = Column('price', Float, nullable = False)
     vehicle_id = Column('vehicle_id', ForeignKey('vehicles.id'), nullable= True)
 
@@ -69,10 +60,3 @@ class ParkingRecords(Base):
     exit_time = Column(DateTime(timezone=True), nullable=True)
     price = Column('price', Numeric(10, 2), nullable= True)
     paid = Column('paid', Boolean, nullable= False, default=False)
-    
-
-    '''calculo do exit_time
-    record.exit_time = datetime.now(ZoneInfo("America/Sao_Paulo"))
-    delta = record.exit_time - record.entry_time
-    total_minutes = delta.total_seconds() / 60
-    total_hours = total_minutes / 60'''

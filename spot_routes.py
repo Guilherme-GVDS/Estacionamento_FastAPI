@@ -17,7 +17,18 @@ async def home():
 @spot_router.post('/register_spot')
 async def register_spot(spot_schema: SpotSchema,
                         session: Session = Depends(get_session)):
-        new_spot = ParkingSpots(spot_schema.is_occupied, spot_schema.price, spot_schema.vehicle_id)
+    '''
+    Cadastra uma nova vaga no sistema.
+    
+    
+    type: Tipo de vaga (moto ou carro)
+    price: Preço por hora da vaga
+    '''   
+    if spot_schema.type not in ['moto','carro']:
+        raise HTTPException (status_code=400, detail='Definir o tipo de veiculo para moto ou carro')
+    else:
+        new_spot = ParkingSpots(type=spot_schema.type, 
+                                price=spot_schema.price)
         session.add(new_spot)
         session.commit() 
         return {'mensagem': f'Vaga cadastrada'}

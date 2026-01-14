@@ -38,7 +38,7 @@ class VehicleSchema(BaseModel):
         from_attributes = True   
 
 class SpotSchema(BaseModel):
-    is_occupied: bool
+    type: str
     price: float
     
     class Config:
