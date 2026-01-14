@@ -20,10 +20,10 @@ async def register_spot(spot_schema: SpotSchema,
     '''
     Cadastra uma nova vaga no sistema.
     
-    
     type: Tipo de vaga (moto ou carro)
     price: Preço por hora da vaga
     '''   
+    
     if spot_schema.type not in ['moto','carro']:
         raise HTTPException (status_code=400, detail='Definir o tipo de veiculo para moto ou carro')
     else:

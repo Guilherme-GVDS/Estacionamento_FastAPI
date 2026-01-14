@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models import Vehicle, ParkingSpots, ParkingRecords
+from models import Vehicle, ParkingSpots, ParkingRecords, User
 from dependencies import get_session, verify_token, ensure_timezone
 from schemas import VehicleSchema
 from sqlalchemy.orm import Session
@@ -19,7 +19,8 @@ async def home():
 
 @park_router.post('/register_vehicle')
 async def register_vehicle(vehicle_schema: VehicleSchema, 
-                      session: Session = Depends(get_session)):
+                      session: Session = Depends(get_session),
+                      user: User = Depends(verify_token)):
     
     '''
     Cadastra um novo veículo no sistema.
@@ -31,9 +32,12 @@ async def register_vehicle(vehicle_schema: VehicleSchema,
     '''
     existing_vehicle = session.query(Vehicle).filter(Vehicle.plate==vehicle_schema.plate).first()
 
+    #Verifica se o veículo já está cadastrado
     if existing_vehicle:
         raise HTTPException (status_code=409,
                              detail=f'Veículo com placa {vehicle_schema.plate} já cadastrado')
+    
+    #Verifica se a informação inserida no type está correta
     elif vehicle_schema.type not in ['moto','carro']:
         raise HTTPException (status_code=400, detail='Definir o tipo de veiculo para moto ou carro')
     else:
@@ -47,43 +51,51 @@ async def register_vehicle(vehicle_schema: VehicleSchema,
     
 
 @park_router.post('/park')
-async def park_vehicle(vehicle_plate, session: Session = Depends(get_session)):
+async def park_vehicle(vehicle_plate, 
+                       session: Session = Depends(get_session),
+                       user: User = Depends(verify_token)):
     '''
     Estaciona um veículo em uma vaga disponível.
     
     vehicle_plate: Placa do veículo a ser estacionado
     '''
+
+    #Verifica se existe o veículo
     vehicle = session.query(Vehicle).filter(Vehicle.plate == vehicle_plate).first()
     if not vehicle:
         raise HTTPException(status_code=400, 
                             detail=f'Veículo com placa {vehicle_plate} não encontrado')
-    else:
-        is_parked=session.query(ParkingSpots).filter(ParkingSpots.vehicle_id == vehicle.id).first()
-        if is_parked:
-            raise HTTPException(status_code=400, detail='Veiculo já estacionado')
-        else:
-            spot = session.query(ParkingSpots).filter(ParkingSpots.is_occupied == False,
-                                                    ParkingSpots.type == vehicle.type).first()
-            if not spot:
-                raise HTTPException(status_code=404, detail='Nenhuma vaga disponível')
-            spot.is_occupied = True
-            spot.vehicle_id = vehicle.id
+    #Verifica se o veículo está estacionado
+    is_parked=session.query(ParkingSpots).filter(ParkingSpots.vehicle_id == vehicle.id).first()
+    if is_parked:
+        raise HTTPException(status_code=400, detail='Veiculo já estacionado')
 
-            park_record = ParkingRecords(parking_spot_id=spot.id, vehicle_id=vehicle.id)
-            session.add(park_record)
+    #Verifica se existe uma vaga disponível
+    spot = session.query(ParkingSpots).filter(ParkingSpots.is_occupied == False,
+                                            ParkingSpots.type == vehicle.type).first()
+    if not spot:
+        raise HTTPException(status_code=404, detail='Nenhuma vaga disponível')
+    
+    #Altera a vaga para ocupada e registra o vehicle.id nela
+    spot.is_occupied = True
+    spot.vehicle_id = vehicle.id
 
-            session.commit()
-            return {
-                'message': 'Veículo estacionado com sucesso',
-                'placa': vehicle_plate,
-                'vaga': spot.id,
-                'tipo_vaga': spot.type,
-                'horario_entrada': park_record.entry_time.isoformat()
-            }
+    park_record = ParkingRecords(parking_spot_id=spot.id, vehicle_id=vehicle.id)
+    session.add(park_record)
+    session.commit()
+    return {
+        'message': 'Veículo estacionado com sucesso',
+        'placa': vehicle_plate,
+        'vaga': spot.id,
+        'tipo_vaga': spot.type,
+        'horario_entrada': park_record.entry_time.isoformat()
+    }
     
 
 @park_router.post('/checkout')
-async def checkout_vehicle(vehicle_plate, session: Session = Depends(get_session)):
+async def checkout_vehicle(vehicle_plate, 
+                           session: Session = Depends(get_session),
+                           user: User = Depends(verify_token)):
     '''
     Realiza o checkout de um veículo estacionado.
     
@@ -91,19 +103,20 @@ async def checkout_vehicle(vehicle_plate, session: Session = Depends(get_session
     
     Calcula o tempo de permanência e o valor a ser pago.
     '''
+    #Verifica se existe o veículo
     vehicle = session.query(Vehicle).filter(Vehicle.plate == vehicle_plate).first()
     if not vehicle:
         raise HTTPException(status_code=404, 
                             detail=f'Veículo com placa {vehicle_plate} não encontrado')
     
+    #Verifica se o veículo está estacionado
     parking_record = session.query(ParkingRecords).filter(
         ParkingRecords.vehicle_id == vehicle.id,
         ParkingRecords.paid == False).first()
-    
     if not parking_record:
         raise HTTPException(status_code=404, detail=(f'Veículo não está estacionado ou checkout já foi realizado'))
     
-
+    #Verifica se a vaga existe
     spot = session.query(ParkingSpots).filter(ParkingSpots.id == parking_record.parking_spot_id).first()
     if not spot:
         raise HTTPException(status_code=404, detail=(f'Vaga não encontrada'))
@@ -112,22 +125,20 @@ async def checkout_vehicle(vehicle_plate, session: Session = Depends(get_session
     spot.is_occupied = False
     spot.vehicle_id = None
 
-    # Calcula tempo e valor
+    #Calcula tempo e valor
     entry_time = ensure_timezone(parking_record.entry_time)
     exit_time = datetime.now(ZoneInfo("America/Sao_Paulo"))
     
     delta = exit_time - entry_time
     total_hours = delta.total_seconds() / 3600
     
-    # Considera tempo mínimo de cobrança (ex: mínimo 1 hora)
-    minimum_hours = max(total_hours, 1.0)  # Opcional
+    #Considera tempo mínimo de cobrança (ex: mínimo 1 hora)
+    minimum_hours = max(total_hours, 1.0)
     
-    # Atualiza registro
+    #Atualiza registro
     parking_record.exit_time = exit_time
     parking_record.price = round(minimum_hours * float(spot.price), 2)
     parking_record.paid = True
-
-    
     
     session.commit()
     session.refresh(parking_record)

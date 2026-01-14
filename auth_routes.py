@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from models import User
 from dependencies import get_session, verify_token
 from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
-from schemas import UserSchema, LoginSchema
+from schemas import UserSchema, LoginSchema, UserAdmSchema
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
@@ -43,14 +43,14 @@ async def create_user(user_schema: UserSchema,
         raise HTTPException (status_code=400, detail='E-mail já cadastrado')
     else:
         password_cript = bcrypt_context.hash(user_schema.password)
-        new_user = User(user_schema.name, user_schema.email, 
-                        password_cript, user_schema.admin)
+        new_user = User(name=user_schema.name,email=user_schema.email, 
+                        password=password_cript)
         session.add(new_user)
         session.commit() 
         return {'mensagem': f'usuário cadastrado {user_schema.email}'}
     
-    #ativar o create_adm_user após a criação de um usuario adm
-'''@auth_router.post('/create_adm_user')
+
+@auth_router.post('/create_adm_user')
 async def create_adm_user(user_adm_schema: UserAdmSchema, 
                       session: Session = Depends(get_session),
                       user_adm: User = Depends(verify_token)):
@@ -66,7 +66,7 @@ async def create_adm_user(user_adm_schema: UserAdmSchema,
                         password_cript, user_adm_schema.admin)
         session.add(new_user)
         session.commit() 
-        return {'mensagem': f'usuário cadastrado {user_adm_schema.email}'}'''
+        return {'mensagem': f'usuário cadastrado {user_adm_schema.email}'}
     
 @auth_router.post('/login')
 async def login (login_schema: LoginSchema, session: Session = Depends(get_session)):

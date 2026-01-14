@@ -6,7 +6,6 @@ class UserSchema(BaseModel):
     name: str
     email: str
     password: str
-    admin: bool
     
     class Config:
         from_attributes = True
